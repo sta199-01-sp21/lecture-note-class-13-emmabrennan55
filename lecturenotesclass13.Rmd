@@ -357,11 +357,8 @@ single code chunk with a single pipeline. Provide an interpretation of your resu
 manhattan1 <- manhattan %>% 
   specify(response = rent) %>% 
   generate(reps = 10000, type = "bootstrap") %>% 
-  calculate(stat = "median") 
-
-ggplot(data = manhattan1, 
-       aes(x = stat)) +
-  geom_histogram(binwidth = 50)
+  calculate(stat = "median") %>% 
+  get_ci(level=.95)
 ```
 
 ### A confidence interval for the population proportion - $p$
@@ -370,10 +367,10 @@ Consider the mice radiation dataset. Suppose we want to compute a 95% confidence
 
 First, identify the following:
 
-- Population: 
-- Parameter of interest:
-- Sample:
-- Sample size:
+- Population: Mice not on treatment 
+- Parameter of interest: proportion 
+- Sample: mice not on treatment 
+- Sample size: 261 
 
 ```{r boot_mice}
 boot_prop <- mice %>% 
@@ -383,11 +380,13 @@ boot_prop <- mice %>%
   generate(reps = 10000, type = "bootstrap") %>% 
   calculate(stat = "prop")
 ```
+gives us the proportion of mice that died when you similate the rounds. 
 
 ```{r ci_mice}
 ci_mice_died <- get_ci(boot_prop, level = .95)
 ci_mice_died
 ```
+we are 95% confident that the proportion of mice that died is between 69 and 79.3 percent, the true proportion will be in this interval. 
 
 What does this mean?
 
@@ -397,13 +396,19 @@ What does this mean?
 visualise(boot_prop) +
   shade_ci(ci_mice_died)
 ```
+this visualization is showing us us the shaded confidence interval. 
 
 #### Practice
 
 Consider the mice radiation results. Suppose we want to compute a 90% confidence interval for the proportion of mice that lived while on the treatment, regardless of the dose.
 
 ```{r practice_2_bootstrap}
-
+boot_prep_live <- mice %>% 
+  filter(treat == 1) %>% 
+  mutate(died = if_else(died == 0,"no","yes")) %>% 
+  specify(died, success = "no") %>% 
+  generate(reps = 10000, type = "bootstrap") %>% 
+  calculate(stat = "prop")
 ```
 
 ```{r practice_2_ci}
